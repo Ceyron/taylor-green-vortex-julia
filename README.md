@@ -37,4 +37,84 @@ The crucial incredient to the Taylor Green Vortex is the initial condition:
 
 This initial state results in many stages all the way to full turbulence and, finally, a dissipation and decay.
 
+---
+
 👉 Also check out the [Repo](https://github.com/Ceyron/machine-learning-and-simulation) of my [YouTube Channel](https://www.youtube.com/c/MachineLearningSimulation) for similar simple simulation scripts in Julia and Python.
+
+---
+
+The solution strategy in the file is based on [this paper by Mortensen & Langtangen](https://arxiv.org/abs/1602.03638).
+
+Let's make the following definitions
+
+    u  : The velocity field (3D vector) in spatial domain
+    λ  : The velocity field (3D vector) in Fourier domain
+
+    ω  : The vorticity field (3D vector) in spatial domain
+    η  : The vorticity field (3D vector) in Fourier domain
+
+    m  : The product of vorticity and velocity (3D vector) in spatial domain
+    ϕ  : The product of vorticity and velocity (3D vector) in Fourier domain
+
+    k  : The wavenumber vector (3D vector)
+
+    ψ  : The pressure in Fourier domain (1D scalar)
+
+    b  : The rhs of the ODE system in Fourier domain (3D vector)
+
+    i  : The imaginary unit (1D scalar)
+
+0. Initialize the velocity vectors according to the IC and transform them into
+   Fourier Domain
+1. Compute the curl in Fourier Domain by means of a cross
+   product with the wavenumber vector and imaginary unit
+
+        η = ℱ(ω) = ℱ(∇ × u) = i k × λ
+
+2. Transform the vorticity back to spatial domain
+
+        ω = ℱ⁻¹(η)
+
+3. Compute the "convection" by means of a cross product
+
+        m = u × ω
+
+4. Transform the "convection" back into Fourier domain
+
+        ϕ = ℱ(m)
+
+5. Perform a dealising on the convection in order to suppress unresolved wave numbers
+
+6. Compute the (pseudo) "pressure" in Fourier domain
+
+        ψ = (k ⋅ ϕ) / ||k||₂
+
+7. Compute the rhs to the ODE system
+
+        b = m - ν ||k||₂² λ - (k ψ) / ||k||₂
+
+8. Advance the velocity in Fourier Domain by means of an
+   Explicit Euler time step
+   
+        λ ← λ + Δt b
+
+9. Transform the newly obtained velocity back into spatial 
+   domain
+
+        u = ℱ⁻¹(λ)
+
+10. (Optional) visualize the vorticity magnitude in spatial
+   domain interactively
+
+11. Repeat from (1.)
+
+
+In total, it takes us three (three-dimensional) Fourier Transforms per time
+iteration:
+
+- Transformation of the curl to spatial domain
+- Transformation of the "convection" to Fourier Domain
+- Transformation of the velocity to spatial domain
+
+It is called pseudo-spectral because some operations are performed in Fourier
+Domain and some in the spatial domain.
